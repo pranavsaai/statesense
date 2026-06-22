@@ -1,24 +1,27 @@
-// src/components/Mainframe.jsx
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 
 const BOOT_SEQUENCE = [
-  'IBM 3270 TERMINAL EMULATOR v2.1.4',
-  'COPYRIGHT (C) IBM CORP. 1978, 2024',
-  '════════════════════════════════════════════════════════════════════════════════',
-  'CONNECTING TO SYNCHRONY FINANCIAL MAINFRAME...',
-  'HOST: SYF-PROD-MF01.SYNCHRONY.COM',
-  'PORT: 23 (TN3270)',
+  'CONNECTING TO FINANCIAL MAINFRAME...',
   '',
   'AUTHENTICATING...',
   'SESSION ESTABLISHED — CICS REGION: SYFPROD1',
   '════════════════════════════════════════════════════════════════════════════════',
+  '',
+  'INITIALIZING CONNECTED SYSTEMS...',
+  '  [OK] FISERV CORE BANKING GATEWAY       — v18.4.2   CONNECTED',
+  '  [OK] FIRST DATA PAYMENT NETWORK        — TXN READY CONNECTED',
+  '  [OK] CONTENT NAVIGATOR CMS             — v3.2.1    CONNECTED',
+  '  [OK] CONSUMER CENTER PORTAL            — LIVE       CONNECTED',
+  '  [OK] GROQ AI INFERENCE ENGINE          — LLaMA 3.1 ONLINE',
+  '  [OK] STATEMENTSENSE QA DB              — PostgreSQL CONNECTED',
   '',
   'WELCOME TO SYNCHRONY FINANCIAL STATEMENT TESTING SYSTEM',
   'STATEMENTSENSE QA PLATFORM — MARKETING ACTIVATION DIVISION',
   '',
   'TYPE "HELP" FOR AVAILABLE COMMANDS',
   'TYPE "STATUS" FOR SYSTEM STATUS',
+  'TYPE "SYSTEMS" FOR CONNECTED SYSTEMS',
   'TYPE "QUERY" TO RUN VALIDATION QUERIES',
   '',
 ]
@@ -29,6 +32,7 @@ const COMMANDS = {
     ' AVAILABLE COMMANDS                                         ',
     '════════════════════════════════════════════════════════════',
     ' STATUS    — System and SLA status                         ',
+    ' SYSTEMS   — Connected financial systems status            ',
     ' QUERY     — Run SQL validation query                      ',
     ' CYCLES    — List all test cycles                          ',
     ' DEFECTS   — Show open defects                             ',
@@ -45,11 +49,46 @@ const COMMANDS = {
     ' CICS REGION    : SYFPROD1          STATUS: ACTIVE         ',
     ' DB2 DATABASE   : STATEMENTSENSE    STATUS: CONNECTED      ',
     ' GROQ AI ENGINE : LLAMA-3.1-8B      STATUS: ONLINE         ',
-    ' LAST SYNC      : ' + new Date().toISOString().slice(0,19).replace('T',' '),
+    ' LAST SYNC      : ' + new Date().toISOString().slice(0, 19).replace('T', ' '),
     '════════════════════════════════════════════════════════════',
     ' SLA ADHERENCE  : 94.5%             TARGET: 95%            ',
     ' OPEN DEFECTS   : FETCHING...                              ',
     ' COMPLIANCE     : 85/100            RISK: MEDIUM           ',
+    '════════════════════════════════════════════════════════════',
+    '',
+  ],
+  
+  systems: [
+    '════════════════════════════════════════════════════════════',
+    ' CONNECTED FINANCIAL SYSTEMS — SYNCHRONY INTEGRATION LAYER ',
+    '════════════════════════════════════════════════════════════',
+    '                                                            ',
+    ' CORE BANKING                                               ',
+    '  SYSTEM   : FISERV CORE BANKING GATEWAY                   ',
+    '  VERSION  : 18.4.2                                        ',
+    '  STATUS   : CONNECTED — READ/WRITE                        ',
+    '  PURPOSE  : Account data, statement generation pipeline   ',
+    '                                                            ',
+    ' PAYMENT NETWORK                                            ',
+    '  SYSTEM   : FIRST DATA PAYMENT NETWORK                    ',
+    '  ENDPOINT : TXN-GATEWAY-PROD.FIRSTDATA.COM                ',
+    '  STATUS   : CONNECTED — TRANSACTION READY                 ',
+    '  PURPOSE  : Payment validation, reconciliation queries    ',
+    '                                                            ',
+    ' CONTENT MANAGEMENT                                         ',
+    '  SYSTEM   : CONTENT NAVIGATOR v3.2.1                      ',
+    '  STATUS   : CONNECTED — OVERLAY ENGINE ACTIVE             ',
+    '  PURPOSE  : Statement overlays, inserts, messaging CMS    ',
+    '                                                            ',
+    ' CUSTOMER PORTAL                                            ',
+    '  SYSTEM   : CONSUMER CENTER — LIVE ENVIRONMENT            ',
+    '  STATUS   : CONNECTED — POST-PROD VALIDATION READY        ',
+    '  PURPOSE  : End-to-end post-production statement check    ',
+    '                                                            ',
+    ' AI INFERENCE                                               ',
+    '  SYSTEM   : GROQ AI — LLAMA 3.1 (8B)                     ',
+    '  STATUS   : ONLINE — NLP PIPELINE ACTIVE                  ',
+    '  PURPOSE  : Compliance diff, RCA, test case generation    ',
     '════════════════════════════════════════════════════════════',
     '',
   ],
@@ -111,14 +150,14 @@ const COMMANDS = {
 }
 
 export default function Mainframe() {
-  const [lines, setLines] = useState([])
-  const [input, setInput] = useState('')
-  const [booting, setBooting] = useState(true)
+  const [lines, setLines]       = useState([])
+  const [input, setInput]       = useState('')
+  const [booting, setBooting]   = useState(true)
   const [bootIndex, setBootIndex] = useState(0)
-  const [cursor, setCursor] = useState(true)
+  const [cursor, setCursor]     = useState(true)
   const [queryMode, setQueryMode] = useState(false)
   const terminalRef = useRef()
-  const inputRef = useRef()
+  const inputRef    = useRef()
 
   // Boot sequence
   useEffect(() => {
@@ -154,7 +193,6 @@ export default function Mainframe() {
   const handleCommand = async (cmd) => {
     const command = cmd.trim().toLowerCase()
 
-    // Echo the command
     setLines(prev => [...prev, { text: `> ${cmd.toUpperCase()}`, type: 'input' }])
     setInput('')
 
@@ -173,17 +211,16 @@ export default function Mainframe() {
     }
 
     if (queryMode) {
-      // Execute SQL via backend
       try {
         addLines([' EXECUTING QUERY...', ''], 'system')
         const res = await fetch('http://127.0.0.1:8000/api/sql/execute', {
-          method: 'POST',
+          method:  'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ query: cmd })
+          body:    JSON.stringify({ query: cmd })
         })
         const data = await res.json()
         if (data.columns && data.rows) {
-          const header = ' ' + data.columns.join('  |  ')
+          const header  = ' ' + data.columns.join('  |  ')
           const divider = ' ' + '─'.repeat(Math.min(header.length, 76))
           addLines([
             '════════════════════════════════════════════════════════════',
@@ -211,15 +248,14 @@ export default function Mainframe() {
       addLines(COMMANDS[command])
       if (command === 'query') setQueryMode(true)
 
-      // Live data for cycles and defects
       if (command === 'cycles') {
         try {
-          const res = await fetch('http://127.0.0.1:8000/api/cycles')
+          const res  = await fetch('http://127.0.0.1:8000/api/cycles')
           const data = await res.json()
           const rows = data.length === 0
             ? [' NO CYCLES FOUND']
             : data.map(c =>
-                ` ${String(c.id).padEnd(4)} ${c.name.slice(0,30).padEnd(30)} ${String(c.pass_percentage?.toFixed(1) + '%').padEnd(8)} ${c.status}`
+                ` ${String(c.id).padEnd(4)} ${c.name.slice(0, 30).padEnd(30)} ${String(c.pass_percentage?.toFixed(1) + '%').padEnd(8)} ${c.status}`
               )
           addLines([
             ' ID   NAME                           PASS%    STATUS',
@@ -235,13 +271,13 @@ export default function Mainframe() {
 
       if (command === 'defects') {
         try {
-          const res = await fetch('http://127.0.0.1:8000/api/defects')
+          const res  = await fetch('http://127.0.0.1:8000/api/defects')
           const data = await res.json()
           const open = data.filter(d => d.status === 'Open')
           const rows = open.length === 0
             ? [' NO OPEN DEFECTS — ALL CLEAR']
             : open.map(d =>
-                ` ${String(d.id).padEnd(4)} [${d.severity.toUpperCase().padEnd(8)}] ${d.title.slice(0,40)}`
+                ` ${String(d.id).padEnd(4)} [${d.severity.toUpperCase().padEnd(8)}] ${d.title.slice(0, 40)}`
               )
           addLines([
             ' ID   SEVERITY    TITLE',
@@ -265,9 +301,7 @@ export default function Mainframe() {
   }
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      handleCommand(input)
-    }
+    if (e.key === 'Enter') handleCommand(input)
   }
 
   const getLineColor = (type) => {
@@ -281,6 +315,7 @@ export default function Mainframe() {
 
   return (
     <div className="space-y-3">
+
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="w-3 h-3 rounded-full animate-pulse" style={{ background: '#22c55e' }} />
@@ -291,25 +326,30 @@ export default function Mainframe() {
           style={{ background: 'rgba(34,197,94,0.1)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.2)' }}>
           SESSION ACTIVE
         </span>
+        {/* Gap 2 fix: system tags visible in header */}
+        <span className="text-xs font-mono px-2 py-0.5 rounded"
+          style={{ background: 'rgba(99,102,241,0.08)', color: '#a78bfa', border: '1px solid rgba(99,102,241,0.2)' }}>
+          FISERV · FIRST DATA · CONTENT NAVIGATOR
+        </span>
       </div>
 
       {/* Terminal */}
       <div
         onClick={() => inputRef.current?.focus()}
         style={{
-          background: '#000',
-          border: '2px solid #22c55e',
-          borderRadius: '8px',
-          boxShadow: '0 0 30px rgba(34,197,94,0.15), inset 0 0 60px rgba(0,0,0,0.5)',
-          fontFamily: '"Courier New", Courier, monospace',
-          fontSize: '13px',
-          lineHeight: '1.5',
-          minHeight: '520px',
-          cursor: 'text',
-          position: 'relative',
-          overflow: 'hidden',
-        }}>
-
+          background:    '#000',
+          border:        '2px solid #22c55e',
+          borderRadius:  '8px',
+          boxShadow:     '0 0 30px rgba(34,197,94,0.15), inset 0 0 60px rgba(0,0,0,0.5)',
+          fontFamily:    '"Courier New", Courier, monospace',
+          fontSize:      '13px',
+          lineHeight:    '1.5',
+          minHeight:     '520px',
+          cursor:        'text',
+          position:      'relative',
+          overflow:      'hidden',
+        }}
+      >
         {/* Scanlines overlay */}
         <div style={{
           position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 1,
@@ -319,8 +359,7 @@ export default function Mainframe() {
         {/* Screen content */}
         <div ref={terminalRef} style={{
           padding: '16px', height: '480px', overflowY: 'auto',
-          position: 'relative', zIndex: 2,
-          scrollbarWidth: 'none',
+          position: 'relative', zIndex: 2, scrollbarWidth: 'none',
         }}>
           {lines.map((line, i) => (
             <div key={i} style={{ color: getLineColor(line.type), whiteSpace: 'pre' }}>
@@ -328,7 +367,6 @@ export default function Mainframe() {
             </div>
           ))}
 
-          {/* Input line */}
           {!booting && (
             <div style={{ display: 'flex', alignItems: 'center', color: '#22c55e' }}>
               <span>{queryMode ? 'SQL> ' : '> '}</span>
@@ -342,7 +380,6 @@ export default function Mainframe() {
           )}
         </div>
 
-        {/* Hidden input */}
         <input
           ref={inputRef}
           value={input}
@@ -352,16 +389,16 @@ export default function Mainframe() {
         />
       </div>
 
-      {/* Quick command buttons */}
+      {/* Quick command buttons — SYSTEMS added */}
       <div className="flex flex-wrap gap-2">
-        {['HELP', 'STATUS', 'CYCLES', 'DEFECTS', 'SLA', 'COMPLIANCE', 'QUERY', 'CLEAR'].map(cmd => (
+        {['HELP', 'STATUS', 'SYSTEMS', 'CYCLES', 'DEFECTS', 'SLA', 'COMPLIANCE', 'QUERY', 'CLEAR'].map(cmd => (
           <button key={cmd}
             onClick={() => handleCommand(cmd)}
             className="text-xs px-3 py-1.5 rounded font-mono transition-all"
             style={{
-              background: 'rgba(34,197,94,0.06)',
-              border: '1px solid rgba(34,197,94,0.25)',
-              color: '#4ade80'
+              background: cmd === 'SYSTEMS' ? 'rgba(99,102,241,0.08)' : 'rgba(34,197,94,0.06)',
+              border:     cmd === 'SYSTEMS' ? '1px solid rgba(99,102,241,0.3)' : '1px solid rgba(34,197,94,0.25)',
+              color:      cmd === 'SYSTEMS' ? '#a78bfa' : '#4ade80'
             }}>
             {cmd}
           </button>
