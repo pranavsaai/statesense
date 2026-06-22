@@ -19,63 +19,62 @@ Built to mirror the real-world workflow of billing statement testing teams at co
 
 The backend API is currently hosted on an EC2 instance over HTTP. When I initially deployed the frontend through CloudFront using HTTPS, the browser blocked API requests due to mixed-content restrictions (HTTPS frontend calling an HTTP backend). Since this is a demo/student project, I temporarily hosted the frontend using the S3 Static Website endpoint, which serves over HTTP, allowing successful communication with the backend. For a production deployment, I would secure the backend using SSL/TLS (Nginx + Let's Encrypt or AWS Certificate Manager) and then serve both frontend and backend over HTTPS.
 
----
+## Production Security & Deployment Plan
 
-## 📸 Screenshots
+Current Deployment:
+- Frontend hosted using Amazon S3 Static Website Hosting.
+- Backend hosted on Amazon EC2 using FastAPI.
+- Communication currently uses HTTP for demonstration purposes.
 
-### 1. Dashboard — Real-Time QA Metrics
-> Pass rate, SLA adherence, open defects, statement comparisons — all live from the database.
+Planned Production Deployment:
 
-![Dashboard](screenshots/dashboard.png)
+### Step 1: Register a Custom Domain
+- Purchase or configure a domain (e.g., api.statementsense.com).
+- Configure Route 53 DNS records to point the domain to the EC2 instance.
 
----
+### Step 2: Configure Nginx Reverse Proxy
+- Install Nginx on the EC2 server.
+- Forward external traffic to the FastAPI application running on port 8000.
+- Restrict direct access to backend ports.
 
-### 2. Statement Comparison — PDF Upload & AI Analysis
-> Upload two billing PDFs. AI detects APR changes, missing SCRA disclosures, marketing offer changes, and compliance violations. Returns compliance score + risk level.
+### Step 3: Enable SSL/TLS Encryption
+- Install Certbot and Let's Encrypt certificates.
+- Generate and automatically renew SSL certificates.
+- Redirect all HTTP traffic to HTTPS.
 
-![Statement Comparison](screenshots/compare.png)
+### Step 4: Secure Frontend Delivery
+- Host frontend through Amazon CloudFront.
+- Attach SSL certificates using AWS Certificate Manager (ACM).
+- Enable HTTPS-only access.
 
----
+### Step 5: Strengthen API Security
+- Enable CORS restrictions.
+- Implement JWT-based authentication.
+- Add request validation and rate limiting.
+- Configure secure HTTP headers.
 
-### 3. Mainframe Terminal — IBM 3270 Green Screen Emulator
-> Functional green screen terminal with boot sequence, CICS session, and live commands (STATUS, SLA, CYCLES, DEFECTS, QUERY). Connects to Fiserv, First Data, Content Navigator, and Consumer Center systems.
+### Step 6: Monitoring & Logging
+- Configure AWS CloudWatch for application monitoring.
+- Track API usage and server health.
+- Enable error logging and alerting.
 
-![Mainframe Terminal](screenshots/mainframe.png)
+### Final Architecture
 
----
+User
+ ↓ HTTPS
+CloudFront + ACM
+ ↓ HTTPS
+Nginx Reverse Proxy
+ ↓
+FastAPI Backend (EC2)
+ ↓
+Application Services
 
-### 4. Test Cycles — Create, Manage & Track QA Cycles
-> Create test cycles with SLA deadlines. Bulk-add AI-generated test cases. Track pass/fail/blocked status per case with real-time pass percentage.
-
-![Test Cycles](screenshots/testcycles.png)
-
----
-
-### 5. Defect Log — AI Root Cause Analysis
-> Log defects with severity levels. Every defect gets an AI-generated root cause analysis from Groq LLM automatically on creation.
-
-![Defects](screenshots/defects.png)
-
----
-
-### 6. Excel Report Export — 3-Sheet QA Report
-> One-click export per cycle. Generates a formatted `.xlsx` with Executive Summary (KPIs), Test Case Log, and Defect Log sheets.
-
-![Excel Report](screenshots/excel_report.png)
-
----
-
-### 7. AWS Infrastructure — EC2, RDS, S3, CloudFront
-> Full production deployment on AWS Free Tier. EC2 runs Dockerized backend, RDS hosts PostgreSQL, S3 + CloudFront serves the React frontend globally over HTTPS.
-
-![AWS Console](screenshots/aws_console.png)
-
----
-
-### 8. Swagger API Docs — 16 REST Endpoints
-> Auto-generated interactive API documentation via FastAPI. All endpoints testable directly from the browser.
-
-![Swagger Docs](screenshots/swagger.png)
+Benefits:
+- End-to-end encrypted communication.
+- Protection against mixed-content issues.
+- Improved performance through CloudFront caching.
+- Production-grade security and scalability.
 
 ---
 
