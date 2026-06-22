@@ -1,0 +1,72 @@
+# ── ENVIRONMENT & SECRETS ─────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# ── PYTHON ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
+venv/
+.venv/
+env/
+ENV/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+coverage.xml
+*.log
+
+# ── NODE / FRONTEND ───────────────────────────────────────────────────────────
+node_modules/
+dist/
+dist-ssr/
+*.local
+.parcel-cache/
+.cache/
+
+# ── VITE ──────────────────────────────────────────────────────────────────────
+frontend/dist/
+frontend/.vite/
+
+# ── OS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── EDITOR ────────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── DATABASE ──────────────────────────────────────────────────────────────────
+*.db
+*.sqlite
+*.sqlite3
+
+# ── UPLOADS / TEMP ────────────────────────────────────────────────────────────
+uploads/
+temp/
+tmp/
+*.pdf
